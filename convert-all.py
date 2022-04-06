@@ -89,8 +89,8 @@ class FileDatabase:
 
 def run_ffmpeg(filename):
     process = subprocess.run(["ffmpeg", "-i", filename, "-c:v", "libx265",
-                              "-c:a", "libopus", "-ab", "64k", "-y", filename + ".mkv"],
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                              "-vf", "scale='min(1280,iw)':'min(720,ih)'",
+                              "-c:a", "libopus", "-ab", "64k", "-y", filename + ".mkv"])
 
     if process.returncode != 0:
         print("Error: " + filename)
