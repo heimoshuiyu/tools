@@ -134,8 +134,9 @@ def replace_cells_in_table(doc, wb):
         print('Processing table', count+1, '/', total, end='\r')
         for row in table.rows:
             for cell in row.cells:
-                if cell.text.startswith('[') and cell.text.endswith(']'):
-                    text = cell.text.strip('[]')
+                celltext = cell.text.strip()
+                if celltext.startswith('[') and celltext.endswith(']'):
+                    text = celltext.strip('[]')
                     try:
                         sheet_code, cell_code = text.split('$')
                     except:
