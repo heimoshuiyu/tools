@@ -1,7 +1,8 @@
-import openpyxl 
+import openpyxl
 import docx
 import os
 import warnings
+
 
 def main():
     doc_filename = input('输入报表附注模板：').strip()
@@ -60,6 +61,7 @@ def main():
 
     input('按任意键退出...')
 
+
 def append_wb(wb, new_wb):
     total_sheet_nums = len(new_wb.sheetnames)
     for count, sheet_name in enumerate(new_wb.sheetnames):
@@ -73,6 +75,7 @@ def append_wb(wb, new_wb):
                 wb[new_sheet_name][cell.coordinate].value = cell.value
     print()
 
+
 def clean_filename(s):
     s = s.strip()
     if s.startswith('"'):
@@ -85,6 +88,7 @@ def clean_filename(s):
         s = s[:-1]
     return s.strip()
 
+
 def is_number(i):
     try:
         float(i)
@@ -93,6 +97,8 @@ def is_number(i):
         return False
 
 # add thousands separator to numbers
+
+
 def format_cell(v):
     """
     Format the cell to be a string
@@ -128,6 +134,7 @@ def remove_all_empty_rows(wb):
             if all(cell.value is None for cell in row):
                 sheet.delete_rows(row[0].row)
 
+
 def replace_cells_in_table(doc, wb):
     total = len(doc.tables)
     for count, table in enumerate(doc.tables):
@@ -152,21 +159,24 @@ def replace_cells_in_table(doc, wb):
                     if sheet_name is None:
                         print('【错误】无法找到工作表', sheet_code)
                         continue
-                    
+
                     # replace cell text
                     # cell.text = format_cell(wb[sheet_name][cell_code].value)
                     try:
-                        replace_key_in_doc(cell, cell.text, format_cell(wb[sheet_name][cell_code].value))
+                        replace_key_in_doc(cell, cell.text, format_cell(
+                            wb[sheet_name][cell_code].value))
                     except Exception as e:
                         print('【错误】在替换', cell.text, '出错', e)
                         continue
     print()
+
 
 def shuttle_text(shuttle):
     t = ''
     for i in shuttle:
         t += i.text
     return t
+
 
 def replace_key_in_doc(doc, key, value):
     for p in doc.paragraphs:
@@ -198,7 +208,8 @@ def replace_key_in_doc(doc, key, value):
                 else:
                     replace_begin_index = shuttle_text(shuttle).index(key)
                     replace_end_index = replace_begin_index + len(key)
-                    replace_end_index_in_last_run = replace_end_index - len(shuttle_text(shuttle[:-1]))
+                    replace_end_index_in_last_run = replace_end_index - \
+                        len(shuttle_text(shuttle[:-1]))
                     shuttle[0].text = shuttle[0].text[:replace_begin_index] + value
 
                     # clear middle runs
@@ -212,6 +223,7 @@ def replace_key_in_doc(doc, key, value):
 
                 # set begin to next
                 begin = end
+
 
 if __name__ == '__main__':
     main()
