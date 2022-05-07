@@ -2,6 +2,7 @@ import openpyxl
 import docx
 import os
 import warnings
+import re
 
 
 def main():
@@ -52,6 +53,7 @@ def main():
     remove_all_empty_rows(wb)
 
     print('执行替换...')
+    replace_cells_in_paragraph(doc, wb)
     replace_cells_in_table(doc, wb)
 
     print('保存文件...')
@@ -135,6 +137,37 @@ def remove_all_empty_rows(wb):
                 sheet.delete_rows(row[0].row)
 
 
+def replace_cells_in_paragraph(doc, wb):
+    total = len(doc.paragraphs)
+    for count, p in enumerate(doc.paragraphs):
+        print('Processing paragraph', count+1, '/', total, end='\r')
+        text = p.text
+        matches = re.findall(r'\[.*?\$.*?\]', text)
+        for m in matches:
+            try:
+                sheet_code, cell_code = m.strip().strip('[]').split('$')
+            except:
+                print('【错误】无法识别的内容', m)
+                continue
+
+            # find sheet
+            sheet_name = None
+            for name in wb.sheetnames:
+                if sheet_code == name.split(' ')[0]:
+                    sheet_name = name
+                    break
+            if sheet_name is None:
+                print('【错误】无法找到工作表', sheet_code)
+                continue
+
+            try:
+                replace_key_in_paragraph(p, m, format_cell(
+                    wb[sheet_name][cell_code].value))
+            except Exception as e:
+                print('【错误】在替换', p.text, '出错', e)
+                continue
+
+
 def replace_cells_in_table(doc, wb):
     total = len(doc.tables)
     for count, table in enumerate(doc.tables):
@@ -180,49 +213,52 @@ def shuttle_text(shuttle):
 
 def replace_key_in_doc(doc, key, value):
     for p in doc.paragraphs:
+        replace_key_in_paragraph(p, key, value)
 
-        begin = 0
-        for end in range(len(p.runs)):
+
+def replace_key_in_paragraph(p, key, value):
+    begin = 0
+    for end in range(len(p.runs)):
+
+        shuttle = p.runs[begin:end+1]
+
+        full_text = shuttle_text(shuttle)
+        # print('full_text:', full_text)
+        if key in full_text:
+            # print('Replace：', key, '->', value)
+            # print([i.text for i in shuttle])
+
+            # find the begin
+            index = full_text.index(key)
+            # print('full_text length', len(full_text), 'index:', index)
+            while index >= len(p.runs[begin].text):
+                index -= len(p.runs[begin].text)
+                begin += 1
 
             shuttle = p.runs[begin:end+1]
 
-            full_text = shuttle_text(shuttle)
-            # print('full_text:', full_text)
-            if key in full_text:
-                # print('Replace：', key, '->', value)
-                # print([i.text for i in shuttle])
+            # do replace
+            # print('before replace', [i.text for i in shuttle])
+            if key in shuttle[0].text:
+                shuttle[0].text = shuttle[0].text.replace(key, value)
+            else:
+                replace_begin_index = shuttle_text(shuttle).index(key)
+                replace_end_index = replace_begin_index + len(key)
+                replace_end_index_in_last_run = replace_end_index - \
+                    len(shuttle_text(shuttle[:-1]))
+                shuttle[0].text = shuttle[0].text[:replace_begin_index] + value
 
-                # find the begin
-                index = full_text.index(key)
-                # print('full_text length', len(full_text), 'index:', index)
-                while index >= len(p.runs[begin].text):
-                    index -= len(p.runs[begin].text)
-                    begin += 1
+                # clear middle runs
+                for i in shuttle[1:-1]:
+                    i.text = ''
 
-                shuttle = p.runs[begin:end+1]
+                # keep last run
+                shuttle[-1].text = shuttle[-1].text[replace_end_index_in_last_run:]
 
-                # do replace
-                # print('before replace', [i.text for i in shuttle])
-                if key in shuttle[0].text:
-                    shuttle[0].text = shuttle[0].text.replace(key, value)
-                else:
-                    replace_begin_index = shuttle_text(shuttle).index(key)
-                    replace_end_index = replace_begin_index + len(key)
-                    replace_end_index_in_last_run = replace_end_index - \
-                        len(shuttle_text(shuttle[:-1]))
-                    shuttle[0].text = shuttle[0].text[:replace_begin_index] + value
+            # print('after replace', [i.text for i in shuttle])
 
-                    # clear middle runs
-                    for i in shuttle[1:-1]:
-                        i.text = ''
-
-                    # keep last run
-                    shuttle[-1].text = shuttle[-1].text[replace_end_index_in_last_run:]
-
-                # print('after replace', [i.text for i in shuttle])
-
-                # set begin to next
-                begin = end
+            # set begin to next
+            begin = end
 
 
 if __name__ == '__main__':
