@@ -166,6 +166,7 @@ def replace_cells_in_paragraph(doc, wb):
             except Exception as e:
                 print('【错误】在替换', p.text, '出错', e)
                 continue
+    print()
 
 
 def replace_cells_in_table(doc, wb):
