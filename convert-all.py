@@ -19,6 +19,7 @@ class FileDatabase:
         self.c = self.conn.cursor()
         self.create_table()
         self.type_list = [".mp4", ".wmv"]
+        self.order = 'path'
 
     def clean_status(self):
         self.conn.execute(
@@ -28,6 +29,7 @@ class FileDatabase:
     def create_table(self):
         self.c.execute('''CREATE TABLE IF NOT EXISTS files (
                             path TEXT PRIMARY KEY,
+                            size INTEGER NOT NULL,
                             done BOOLEAN NOT NULL DEFAULT false,
                             converting BOOLEAN NOT NULL DEFAULT false,
                             transfering BOOLEAN NOT NULL DEFAULT false);
@@ -35,7 +37,7 @@ class FileDatabase:
 
     def add_file(self, path):
         self.c.execute(
-            "INSERT OR IGNORE INTO files (path) VALUES (?)", (path,))
+            "INSERT OR IGNORE INTO files (path, size) VALUES (?, ?)", (path, os.path.getsize(path)))
         self.conn.commit()
 
     def get_files(self):
@@ -76,7 +78,7 @@ class FileDatabase:
 
     def fetch_one(self):
         self.c.execute(
-            "SELECT * FROM files WHERE done = false AND converting = false AND transfering = false ORDER BY path LIMIT 1;")
+            "SELECT * FROM files WHERE done = false AND converting = false AND transfering = false ORDER BY %s LIMIT 1;" % self.order)
         return self.c.fetchone()
 
     def walk(self, path):
@@ -142,6 +144,10 @@ if __name__ == "__main__":
                     os.remove(file[0])
                     print("Delete: {}".format(file[0]))
             exit(0)
+        elif args[1] == 'small':
+            db.order = 'size'
+        elif args[1] == 'large':
+            db.order = 'size DESC'
 
     while True:
         file = db.fetch_one()
