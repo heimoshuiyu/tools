@@ -140,7 +140,7 @@ if __name__ == "__main__":
         elif args[1] == "delete":
             files = db.get_files()
             for file in files:
-                if file[1] == 1:
+                if file[2] == 1:
                     os.remove(file[0])
                     print("Delete: {}".format(file[0]))
             exit(0)
