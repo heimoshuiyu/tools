@@ -50,10 +50,14 @@ const html = await fetch(CourseURL, {
 }).then((resp) => resp.text());
 const $ = cheerio.load(html);
 
+// get course title for download path
+const courseTitle = $("header div h1").text().trim();
+console.log("Course title:", courseTitle);
+
 // loop for each sections in course page
 for await (const section of $("li.section.main.clearfix")) {
   const sectionName = $("h3.sectionname a", section).text().trim();
-  const sectionPath = join(downloadPath, sectionName);
+  const sectionPath = join(downloadPath, courseTitle, sectionName);
   console.log("section:", sectionName);
 
   if (!(await exist(sectionPath))) {
@@ -83,7 +87,7 @@ for await (const section of $("li.section.main.clearfix")) {
       disposition.parse(disp).parameters.filename || "untitled file";
     console.log("\tfilename:", filename);
 
-    const filepath = join(downloadPath, sectionName, filename);
+    const filepath = join(downloadPath, courseTitle, sectionName, filename);
     // skip if file exists
     if (await exist(filepath)) {
       console.log("\t...skip");
