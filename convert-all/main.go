@@ -106,7 +106,7 @@ func clean() {
 
 func ffmpeg(filename string) error {
 	cmd := exec.Command("ffmpeg", "-i", filename,
-		"-c:v", "libx265",
+		"-c:v", "libsvtav1", "-crf", "39",
 		"-vf", "scale='min(1280,iw)':'min(720,ih)'",
 		"-c:a", "libopus", "-ab", "64k", "-y", filename+".mkv")
 	cmd.Stdout = os.Stdout
