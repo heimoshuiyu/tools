@@ -77,19 +77,21 @@ func walk() {
 func del() {
 	var total int64
 	log.Println("Deleting...")
-	rows, err := db.Model(&File{}).Where("done = true").Rows()
-	if err != nil {
-		log.Fatal(err)
+	files := make([]File, 0)
+	result := db.Model(&File{}).Where("done = true").Find(&files)
+	if result.Error != nil {
+		log.Fatal(result.Error)
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var file File
-		db.ScanRows(rows, &file)
+	for _, file := range files {
 		log.Println(file.Path)
-		err = os.Remove(file.Path)
+		log.Println("Removing", file.Path)
+		err := os.Remove(file.Path)
 		if err != nil {
 			log.Println("Error deleting file", file.Path, err)
-			continue
+		}
+		result = db.Delete(&file)
+		if result.Error != nil {
+			log.Println("Error deleting record", result.Error, file.Path)
 		}
 		total += file.Filesize
 	}
