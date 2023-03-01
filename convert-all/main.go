@@ -130,26 +130,14 @@ func stats() {
 
 	var convertingFilesize int64
 	result = db.Model(&File{}).Where("done = false and converting = true").Select("sum(filesize)").Scan(&convertingFilesize)
-	if result.Error != nil {
-		log.Fatal(result.Error)
-	}
 	var convertingFileNums int64
 	result = db.Model(&File{}).Where("done = false and converting = true").Count(&convertingFileNums)
-	if result.Error != nil {
-		log.Fatal(result.Error)
-	}
 	log.Println("Converting file size:", humanize.Bytes(uint64(convertingFilesize)), "nums:", convertingFileNums)
 
-	var doneFilesize int64
-	result = db.Model(&File{}).Where("done = true").Select("sum(filesize)").Scan(&doneFilesize)
-	if result.Error != nil {
-		log.Fatal(result.Error)
-	}
 	var doneFileNums int64
 	result = db.Model(&File{}).Where("done = true").Count(&doneFileNums)
-	if result.Error != nil {
-		log.Fatal(result.Error)
-	}
+	var doneFilesize int64
+	result = db.Model(&File{}).Where("done = true").Select("sum(filesize)").Scan(&doneFilesize)
 	log.Println("Done filesize:", humanize.Bytes(uint64(doneFilesize)), "nums:", doneFileNums)
 }
 
