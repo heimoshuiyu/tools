@@ -18,6 +18,12 @@ for (let i = 0; i < lines.length; i++) {
     const idLine = `id = '${id}'`
     console.log('Change to', idLine)
     lines[i] = idLine
-    console.log('Write back file')
-    await Deno.writeTextFile(filepath, lines.join('\n'))
 }
+
+console.log('Write back file')
+await Deno.writeTextFile(filepath, lines.join('\n'))
+
+console.log('Stop rustdesk')
+await (new Deno.Command('net', { args: ['stop', 'rustdesk']})).output()
+console.log('Start rustdesk')
+await (new Deno.Command('net', { args: ['start', 'rustdesk']})).output()
